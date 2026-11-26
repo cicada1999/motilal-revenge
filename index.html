@@ -46,7 +46,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .fade .clock{font-size:4cqw;color:var(--gold);text-shadow:.3cqw .3cqw 0 #6e0f1c;opacity:0;transition:opacity 1s .9s}
 .fade .sub{font-size:1.3cqw;line-height:2;margin-top:2.4cqw;opacity:0;transition:opacity 1s 2.2s;color:#c9b8e8}
 .fade.on .clock,.fade.on .sub{opacity:1}
-.back{position:absolute;bottom:3cqw;left:0;right:0;font-size:1.2cqw;color:#8a77ad;opacity:0;transition:opacity 1s 3.2s}
+.back{position:absolute;bottom:3cqw;left:0;right:0;font-size:1.2cqw;color:#8a77ad;opacity:0;transition:opacity 1s 1.6s}
 .fade.on .back{opacity:1}
 @media (prefers-reduced-motion:reduce){.bg,.title,.press,.item::before{animation:none!important}}
 
@@ -63,6 +63,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .menub,.skip{display:none;position:absolute;top:1.2cqw;z-index:4;background:rgba(10,5,22,.7);border:.3cqw solid var(--gold);color:var(--gold);font-family:inherit;cursor:pointer}.menub{right:1.6cqw;font-size:1.8cqw;padding:.6cqw 1cqw}.skip{display:block;left:1.6cqw;font-size:1.1cqw;padding:.8cqw 1cqw}
 #scene.on~.menub,#ch1.on~.menub{display:block}
 .pause{position:absolute;inset:0;z-index:5;background:rgba(6,3,16,.9);display:none;flex-direction:column;align-items:center;justify-content:center;gap:1.4cqw}.pause.on{display:flex}.pt{font-size:3cqw;color:var(--gold);margin-bottom:1.5cqw}.pause .item{font-size:2cqw}.pause .item:hover{color:var(--gold)}
+.fsb{position:absolute;bottom:1.2cqw;right:1.6cqw;z-index:4;background:rgba(10,5,22,.7);border:.3cqw solid var(--gold);color:var(--gold);font-family:inherit;font-size:1cqw;padding:.7cqw 1cqw;cursor:pointer}#scene.on~.fsb,#ch1.on~.fsb{bottom:auto;top:1.2cqw;right:6.8cqw}
 </style>
 </head>
 <body>
@@ -78,12 +79,12 @@ canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   </div>
   <div class="scene" id="scene"><canvas id="sc" width="1600" height="900"></canvas><button class="skip" id="skip">SKIP &#9654;&#9654;</button><div class="dlg" id="dlg"><div class="nm" id="nm"></div><div id="tx"></div><span class="nx">&#9660;</span></div></div>
 <div class="scene" id="ch1"><canvas id="c1" width="1600" height="900"></canvas><div class="hud" id="hud"></div><div class="dlg" id="d1"><div class="nm" id="n1"></div><div id="t1"></div><span class="nx">&#9660;</span></div><div class="joy" id="joy"><div class="knob" id="knob"></div></div><button class="abtn" id="abtn">A</button></div>
-<div class="pause" id="pause"><div class="pt">PAUSED</div><button class="item" data-p="resume">RESUME</button><button class="item" data-p="restart" id="prs">RESTART CHAPTER</button><button class="item" data-p="quit">QUIT TO TITLE</button></div><button class="menub" id="menub">&#9776;</button><div class="fade" id="fade"><div><div class="clock">11:57 PM</div><div class="sub">The cake is ready.<br>Three minutes to midnight.</div></div><div class="back">TAP TO RETURN TO TITLE</div></div>
+<div class="pause" id="pause"><div class="pt">PAUSED</div><button class="item" data-p="resume">RESUME</button><button class="item" data-p="restart" id="prs">RESTART CHAPTER</button><button class="item" data-p="fs">FULLSCREEN</button><button class="item" data-p="quit">QUIT TO TITLE</button></div><button class="menub" id="menub">&#9776;</button><button class="fsb" id="fsb">FULLSCREEN</button><div class="fade" id="fade"><div><div class="clock">11:57 PM</div><div class="sub">The cake is ready.<br>Three minutes to midnight.</div></div><div class="back">TAP TO RETURN TO TITLE</div></div>
 </main>
 <script>
 (function(){
   var stage=document.getElementById('stage'),press=document.getElementById('press'),menu=document.getElementById('menu'),fade=document.getElementById('fade');
-  var items=[].slice.call(menu.querySelectorAll('.item')),sel=0,state='title',soundOn=true,ac=null;
+  var items=[].slice.call(menu.querySelectorAll('.item')),sel=0,state='title',soundOn=true,ac=null,pend=0,fb=fade.querySelector('.back');
 
   function audio(){try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();}if(ac.state==='suspended')ac.resume();}catch(e){ac=null}return ac}
   function tone(f,t0,d,type,v){var c=audio();if(!c||!soundOn)return;var o=c.createOscillator(),g=c.createGain();o.type=type||'square';o.frequency.value=f;
@@ -95,7 +96,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   function toMenu(){if(state!=='title')return;state='menu';press.hidden=true;menu.hidden=false;jingle();items[sel].focus({preventScroll:true})}
   function act(a){if(state==='intro')return;
     if(a==='sound'){soundOn=!soundOn;items[1].textContent='SOUND: '+(soundOn?'ON':'OFF');blip();return}
-    if(a==='new'){state='intro';jingle();fade.classList.add('on');setTimeout(function(){window.startIntro&&window.startIntro()},3300)}
+    if(a==='new'){state='intro';jingle();pend=1;fb.textContent='TAP TO START';fade.classList.add('on')}
   }
   function back(){if(state!=='intro')return;window.stopIntro&&window.stopIntro();menu.hidden=false;fade.classList.remove('on');state='menu';items[sel].focus({preventScroll:true})}
 
@@ -104,14 +105,14 @@ canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     el.addEventListener('mouseenter',function(){if(sel!==i){sel=i;show();blip()}});
     el.addEventListener('click',function(){sel=i;show();act(el.dataset.a)});
   });
-  fade.addEventListener('click',back);window.quitToTitle=back;
+  function fgo(){if(pend){pend=0;window.startIntro&&window.startIntro()}else if(fb.textContent)back()}fade.addEventListener('click',fgo);window.quitToTitle=back;window.fgo=fgo;
   document.addEventListener('keydown',function(e){
     var k=e.key;
     if(state==='title'&&(k==='Enter'||k===' ')){e.preventDefault();toMenu();return}
     if(state==='menu'){
       if(k==='ArrowDown'||k==='ArrowUp'||k==='ArrowLeft'||k==='ArrowRight'){e.preventDefault();var fwd=(k==='ArrowDown'||k==='ArrowRight');sel=(sel+(fwd?1:items.length-1))%items.length;show();items[sel].focus({preventScroll:true});blip()}
       else if(k==='Enter'||k===' '){e.preventDefault();act(items[sel].dataset.a)}
-    } else if(state==='intro'&&(k==='Escape'||k==='Backspace')){window.togglePause&&window.togglePause()}
+    } else if(state==='intro'&&pend&&(k==='Enter'||k===' ')){e.preventDefault();fgo()}else if(state==='intro'&&(k==='Escape'||k==='Backspace')){if(pend){pend=0;back()}else window.togglePause&&window.togglePause()}
   });
 
   /* embers */
@@ -209,7 +210,7 @@ await say('Shona','Alone, you cannot stop him. Come, you will need all of us.');
 await say('Khushi','Okay. Let’s get Panda back.');
 fd.querySelector('.clock').textContent='CHAPTER 1';fd.querySelector('.sub').innerHTML='The Moonlit Road';fd.classList.add('on');await wait(3200);window.startCh1&&window.startCh1()
 }catch(e){if(e!==0)throw e}}
-window.startIntro=function(){window.INTRO=1;run=1;T0=1;sc.classList.add('on');var m=document.getElementById('menu');m.hidden=true;if(document.activeElement)document.activeElement.blur();fd.classList.remove('on');seq()};
+window.startIntro=function(){window.INTRO=1;run=1;fd.querySelector('.back').textContent='';T0=1;sc.classList.add('on');var m=document.getElementById('menu');m.hidden=true;if(document.activeElement)document.activeElement.blur();fd.classList.remove('on');seq()};
 window.stopIntro=function(){window.INTRO=0;run=0;window.stopCh1&&window.stopCh1();sc.classList.remove('on');dl.classList.remove('on');if(typing)clearInterval(typing);adv=null};
 })();
 </script>
@@ -257,7 +258,7 @@ async function act(h){if(busy)return;try{
   await say('Motilal','HEHEHE! Found my crumbs? Come and get me, if you can!');
   await say('Shona','Come, child. The crumbs lead on to the town ahead. Billu and Rani live there.');
   await say('Khushi','Okay. Let’s go.');
-  fd.querySelector('.clock').textContent='TO BE CONTINUED';fd.querySelector('.sub').innerHTML='Chapter 2 is next.';fd.classList.add('on');return}
+  fd.querySelector('.clock').textContent='TO BE CONTINUED';fd.querySelector('.sub').innerHTML='Chapter 2 is next.';fd.querySelector('.back').textContent='TAP TO RETURN TO TITLE';fd.classList.add('on');return}
  for(var i=0;i<h.L.length;i++)await say(h.L[i][0],h.L[i][1]);
  if(!seen[h.n]){seen[h.n]=1;nseen++}
  if(stage===1){stage=2;await say('Shona','Well done! Press the action button when nothing is nearby and I will give you a hint. Now explore, and find the bench at the end of the road.');hint='EXPLORE. FIND THE BENCH AT THE END';setHint()}
@@ -296,10 +297,21 @@ if(window.matchMedia&&matchMedia('(pointer:coarse)').matches)sc.classList.add('t
 var pz=document.getElementById('pause'),sk=document.getElementById('skip'),skT=0;
 window.togglePause=function(){if(!run&&!window.INTRO)return;paused=!paused;window.PAUSED=paused?1:0;pz.classList.toggle('on',paused);document.getElementById('prs').style.display=run?'':'none';last=performance.now()};
 document.getElementById('menub').addEventListener('click',function(e){e.stopPropagation();window.togglePause()});
-pz.addEventListener('click',function(e){var p=e.target.getAttribute('data-p');if(!p)return;if(p==='resume')window.togglePause();else if(p==='restart'){window.togglePause();window.startCh1()}else{paused=0;window.PAUSED=0;pz.classList.remove('on');window.quitToTitle&&window.quitToTitle()}});
+pz.addEventListener('click',function(e){var p=e.target.getAttribute('data-p');if(!p)return;if(p==='resume')window.togglePause();else if(p==='fs')document.getElementById('fsb').click();else if(p==='restart'){window.togglePause();window.startCh1()}else{paused=0;window.PAUSED=0;pz.classList.remove('on');window.quitToTitle&&window.quitToTitle()}});
 sk.addEventListener('click',function(e){e.stopPropagation();if(!skT){sk.textContent='SURE? TAP AGAIN';skT=setTimeout(function(){skT=0;sk.innerHTML='SKIP &#9654;&#9654;'},2200)}else{clearTimeout(skT);skT=0;sk.innerHTML='SKIP &#9654;&#9654;';window.startCh1()}});
 window.startCh1=function(){window.stopIntro&&window.stopIntro();run=1;paused=0;window.PAUSED=0;pz.classList.remove('on');last=performance.now();K={x:335,y:55,dir:0,mv:0};Sh={x:305,y:65,dir:0,mv:0};Bu={x:1130,y:488,dir:0,mv:0};trail=[];seen={};nseen=0;ticket=0;stage=0;moved=0;stepT=0;hint='';keys={};setHint();sc.classList.add('on');fd.classList.remove('on');document.getElementById('menu').hidden=true;requestAnimationFrame(frame);intro()};
 window.stopCh1=function(){run=0;sc.classList.remove('on');d1.classList.remove('on');if(typing)clearInterval(typing);adv=null;busy=0};
+})();
+</script>
+<script>
+(function(){var s=document.getElementById('stage'),de=document.documentElement,fsb=document.getElementById('fsb');
+function fit(){de.style.height=window.innerHeight+'px';var bh=document.body.clientHeight;s.style.width=Math.min(window.innerWidth,bh*16/9)+'px'}
+fit();['resize','orientationchange','fullscreenchange','webkitfullscreenchange'].forEach(function(ev){window.addEventListener(ev,function(){fit();setTimeout(fit,250)})});
+if(window.visualViewport)visualViewport.addEventListener('resize',fit);
+function isFs(){return document.fullscreenElement||document.webkitFullscreenElement}
+fsb.addEventListener('click',function(e){e.stopPropagation();if(isFs()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}
+var r=de.requestFullscreen||de.webkitRequestFullscreen;if(!r||!(document.fullscreenEnabled||document.webkitFullscreenEnabled)){var o=fsb.textContent;fsb.textContent='NOT AVAILABLE HERE';setTimeout(function(){fsb.textContent=o},2500);return}
+var p=r.call(de);if(p&&p.then)p.then(function(){try{screen.orientation.lock('landscape').catch(function(){})}catch(x){}}).catch(function(){})});
 })();
 </script>
 </body>
